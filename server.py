@@ -31,6 +31,9 @@ sc301 = "HTTP/1.1 301 Moved Permanently\r\n"
 sc400 = "HTTP/1.1 400 Bad Request\r\n"
 sc404 = "HTTP/1.1 404 Not Found\r\n"
 sc405 = "HTTP/1.1 405 Method Not Allowed\r\n"
+
+cssMime = 'Content-Type: text/html; utf-8\r\n'
+htmlMime = 'Content-Type: text/css; utf-8\r\n'
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
@@ -38,8 +41,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
         print ("Got a request of: %s\n" % self.data)
         #self.request.sendall(bytearray("OK",'utf-8'))
 
-        header = self.data.split(' ')[0]
+        data = self.data.split(' ')
+        header = data[0]
         #print(header)
+        if header != 'GET':
+            self.request.sendall(bytearray(sc405, 'utf-8'))
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
