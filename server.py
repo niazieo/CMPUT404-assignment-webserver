@@ -26,13 +26,20 @@ import socketserver
 
 # try: curl -v -X GET http://127.0.0.1:8080/
 
-
+sc200 = "HTTP/1.1 200 OK\r\n"
+sc301 = "HTTP/1.1 301 Moved Permanently\r\n"
+sc400 = "HTTP/1.1 400 Bad Request\r\n"
+sc404 = "HTTP/1.1 404 Not Found\r\n"
+sc405 = "HTTP/1.1 405 Method Not Allowed\r\n"
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
-        self.data = self.request.recv(1024).strip()
+        self.data = self.request.recv(1024).strip().decode('utf-8')
         print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        #self.request.sendall(bytearray("OK",'utf-8'))
+
+        header = self.data.split(' ')[0]
+        #print(header)
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
