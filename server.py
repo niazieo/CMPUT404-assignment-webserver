@@ -1,7 +1,7 @@
 #  coding: utf-8 
 import socketserver
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+# Copyright 2013 Abram Hindle, Eddie Antonio Santos, Omar Niazie
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ sc400 = "HTTP/1.1 400 Bad Request\r\n"
 sc404 = "HTTP/1.1 404 Not Found\r\n"
 sc405 = "HTTP/1.1 405 Method Not Allowed\r\n"
 
-cssMime = 'Content-Type: text/html; utf-8\r\n'
-htmlMime = 'Content-Type: text/css; utf-8\r\n'
+htmlMime = 'Content-Type: text/html\r\n'
+cssMime = 'Content-Type: text/css\r\n'
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
@@ -44,8 +44,41 @@ class MyWebServer(socketserver.BaseRequestHandler):
         data = self.data.split(' ')
         header = data[0]
         #print(header)
+        filename = data[1]
+        #print(filename)
         if header != 'GET':
             self.request.sendall(bytearray(sc405, 'utf-8'))
+
+        if filename == '/':
+            filename = '/index.html'
+
+        if not (filename.endswith("/") or filename.endswith(".css") or filename.endswith(".html")):
+            response = sc301 + "\nLocation: " + filename
+            self.request.sendall(bytearray(response, 'utf-8'))
+            return
+        else:
+            try:
+                fin = open("./www" + filename)
+                content = fin.read()
+                #print("CONTENT: " + content)
+                fin.close()
+
+                # if .html exists, html mime
+                if filename.endswith('.html'):
+                    response = sc200 + htmlMime + content
+                    self.request.sendall(bytearray(response, 'utf-8'))
+                    # if .css exists, css mime
+                elif filename.endswith('.css'):
+                    response = sc200 + cssMime + content
+                    self.request.sendall(bytearray(response, 'utf-8'))
+                
+                # response = sc200 + content
+                # self.request.sendall(bytearray(response, 'utf-8'))
+
+            except FileNotFoundError:
+                response = sc404
+                self.request.sendall(bytearray(response, 'utf-8'))
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
