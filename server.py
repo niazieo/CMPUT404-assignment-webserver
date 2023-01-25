@@ -49,10 +49,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
         if header != 'GET':
             self.request.sendall(bytearray(sc405, 'utf-8'))
 
-        if not (filename.endswith(".html") or filename.endswith('.css')):
-            filename += '/index.html'
-        if filename == '/':
-            filename = '/index.html'
+        if filename == '/' or filename.endswith("/"):
+            filename += 'index.html'
+        # if not (filename.endswith(".html") or filename.endswith('.css')):
+        #     filename += '/index.html'
+        #     print(filename)
+
+        if not (filename.endswith("/") or filename.endswith(".css") or filename.endswith(".html")):
+            # filename += "/index.html"
+            print(f'FILENAME: {filename}')
+            response = sc301 + "\nLocation: " + filename + "\r\n"
 
         try:
             fin = open("./www" + filename)
@@ -60,18 +66,14 @@ class MyWebServer(socketserver.BaseRequestHandler):
             #print("CONTENT: " + content)
             fin.close()
 
-            if not (filename.endswith("/") or filename.endswith(".css") or filename.endswith(".html")):
-                #print(f"FILENAME: {filename}")
-                response = sc301 + "\nLocation: " + filename + '/'
-                self.request.sendall(bytearray(response, 'utf-8'))
-                return
             # if .html exists, html mime
             if filename.endswith('.html'):
-                response = sc200 + htmlMime + content
+                response = sc200 + htmlMime + "\r\n" + content 
+                #print(f'HTML RESPONSE: {response}')
             # if .css exists, css mime
             elif filename.endswith('.css'):
-                response = sc200 + cssMime + content
-
+                response = sc200 + cssMime + "\r\n" + content
+                #print(f'CSS RESPONSE: {response}')
         except:
             response = sc404
         finally:
