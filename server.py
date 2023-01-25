@@ -49,35 +49,34 @@ class MyWebServer(socketserver.BaseRequestHandler):
         if header != 'GET':
             self.request.sendall(bytearray(sc405, 'utf-8'))
 
+        if not (filename.endswith(".html") or filename.endswith('.css')):
+            filename += '/index.html'
         if filename == '/':
             filename = '/index.html'
 
-        if not (filename.endswith("/") or filename.endswith(".css") or filename.endswith(".html")):
-            response = sc301 + "\nLocation: " + filename
-            self.request.sendall(bytearray(response, 'utf-8'))
-            return
-        else:
-            try:
-                fin = open("./www" + filename)
-                content = fin.read()
-                #print("CONTENT: " + content)
-                fin.close()
+        try:
+            fin = open("./www" + filename)
+            content = fin.read()
+            #print("CONTENT: " + content)
+            fin.close()
 
-                # if .html exists, html mime
-                if filename.endswith('.html'):
-                    response = sc200 + htmlMime + content
-                    self.request.sendall(bytearray(response, 'utf-8'))
-                    # if .css exists, css mime
-                elif filename.endswith('.css'):
-                    response = sc200 + cssMime + content
-                    self.request.sendall(bytearray(response, 'utf-8'))
-                
-                # response = sc200 + content
-                # self.request.sendall(bytearray(response, 'utf-8'))
-
-            except FileNotFoundError:
-                response = sc404
+            if not (filename.endswith("/") or filename.endswith(".css") or filename.endswith(".html")):
+                #print(f"FILENAME: {filename}")
+                response = sc301 + "\nLocation: " + filename + '/'
                 self.request.sendall(bytearray(response, 'utf-8'))
+                return
+            # if .html exists, html mime
+            if filename.endswith('.html'):
+                response = sc200 + htmlMime + content
+            # if .css exists, css mime
+            elif filename.endswith('.css'):
+                response = sc200 + cssMime + content
+
+        except:
+            response = sc404
+        finally:
+            self.request.sendall(bytearray(response, 'utf-8'))
+
 
 
 if __name__ == "__main__":
