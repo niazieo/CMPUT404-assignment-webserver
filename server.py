@@ -54,13 +54,15 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # if not (filename.endswith(".html") or filename.endswith('.css')):
         #     filename += '/index.html'
         #     print(filename)
-
         if not (filename.endswith("/") or filename.endswith(".css") or filename.endswith(".html")):
             # filename += "/index.html"
             print(f'FILENAME: {filename}')
             response = sc301 + "\nLocation: " + filename + "\r\n"
 
         try:
+            if filename[0:3] == "/..":
+                raise Exception
+            
             fin = open("./www" + filename)
             content = fin.read()
             #print("CONTENT: " + content)
