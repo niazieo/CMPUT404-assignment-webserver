@@ -1,7 +1,7 @@
 #  coding: utf-8 
 import socketserver
-
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+import os
+# Copyright 2013 Abram Hindle, Eddie Antonio Santos, Omar Niazie
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,9 @@ sc301 = "HTTP/1.1 301 Moved Permanently\r\n"
 sc400 = "HTTP/1.1 400 Bad Request\r\n"
 sc404 = "HTTP/1.1 404 Not Found\r\n"
 sc405 = "HTTP/1.1 405 Method Not Allowed\r\n"
+
+htmlMime = 'Content-Type: text/html\r\n'
+cssMime = 'Content-Type: text/css\r\n'
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
@@ -38,8 +41,43 @@ class MyWebServer(socketserver.BaseRequestHandler):
         print ("Got a request of: %s\n" % self.data)
         #self.request.sendall(bytearray("OK",'utf-8'))
 
-        header = self.data.split(' ')[0]
+        data = self.data.split(' ')
+        header = data[0]
         #print(header)
+        filename = data[1]
+        #print(filename)
+        if header != 'GET':
+            self.request.sendall(bytearray(sc405, 'utf-8'))
+
+        if filename == '/' or filename.endswith("/"):
+            filename += 'index.html'
+        
+        try:
+            if not (filename.endswith("/") or filename.endswith(".css") or filename.endswith(".html")):
+                path = os.path.abspath('/www'+ filename).split('/')
+                if 'www' not in path:
+                    #print(path)
+                    raise Exception
+                if not os.path.exists('./www' + filename):
+                    raise Exception
+                else:
+                    response = sc301 + "\nLocation: " + filename + '/\r\n'
+            else:
+                fin = open("./www" + filename)
+                content = fin.read()
+                fin.close()
+                # if .html exists, html mime
+                if filename.endswith('.html'):
+                    response = sc200 + htmlMime + "\r\n" + content 
+                    #print(f'HTML RESPONSE: {response}')
+                # if .css exists, css mime
+                elif filename.endswith('.css'):
+                    response = sc200 + cssMime + "\r\n" + content
+                    #print(f'CSS RESPONSE: {response}')
+        except:
+            response = sc404
+        finally:
+            self.request.sendall(bytearray(response, 'utf-8'))
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
